@@ -99,9 +99,9 @@ ui <- fluidPage(
    textOutput("selectedDir"),
     column(12, 
            actionButton("setup_btn", "Setup R Code", icon = icon("person-running"), class = "btn btn-primary btn-lg btn-block"),
+           actionButton("run_btn", "Install Selected Extensions",icon = icon("download"), class = "btn btn-success btn-lg btn-block"),
            br(),
-           verbatimTextOutput("install_status"),
-           actionButton("run_btn", "Install Selected Extensions",icon = icon("download"), class = "btn btn-success btn-lg btn-block")
+           verbatimTextOutput("install_status")
     )
   ),
   hr(),
@@ -156,12 +156,18 @@ server <- function(input, output, session) {
   
   output$extensions_table <- renderDT({
     datatable(
-      filtered_extensions() %>% select(name, description, author),
+      filtered_extensions() %>% 
+        select(name, description, author) %>%
+        mutate(description = map(description, ~includeMarkdown(.x))) %>%
+        mutate(author = map(author, ~includeMarkdown(.x)))
+      ,
       selection = 'multiple',
       rownames = FALSE,
       options = list(pageLength = 10)
     )
-  })
+  }
+  # escape = FALSE
+  )
   
   install_commands <- reactiveVal(NULL)
   
@@ -178,7 +184,7 @@ server <- function(input, output, session) {
     
       output$install_status <- renderText({
         paste0(
-          "R setup code:\n", paste(install_commands(), collapse = "\n"), paste("\n\nRunning it at:", install_dir, collapse="\n")
+          "R setup code:\n ", paste(install_commands(), collapse = "\n"), paste("\n\nWill it at:\n", install_dir, collapse="\n")
         )
       })
     } else {
@@ -190,7 +196,7 @@ server <- function(input, output, session) {
       message("Installing extensions...")
       tmp <- setwd(input$install_dir)
       sapply(install_commands(), function(x){
-        message("Running\n", x)
+        message("Running...\n", x)
         eval(parse(text=x))
       })
       setwd(tmp)
