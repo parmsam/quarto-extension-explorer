@@ -74,125 +74,133 @@ lookup_df <- data.frame(
 )
 lookup_df$file_name <- tools::file_path_sans_ext(lookup_df$file_name)
 
-ui <- fluidPage(
-  tags$style(type='text/css', '#install_status {white-space: pre-wrap;}'),
-  titlePanel("Quarto Extension Explorer"),
-  fluidRow(
-    column(12, 
-           selectInput(
-             "setup_type",
-             "Way to install Quarto extension",
-             choices = c(
-               "quarto add extension" = "quarto_add_extension"
-               # "quarto use template" = "quarto_use_template"
-               ),
-             selected = "quarto use"
+run_app <- function(install_dir = getwd()) {
+  ui <- miniUI::miniPage(
+    miniUI::gadgetTitleBar(
+      shiny::div("Quarto Extension Explorer")
+    ),
+    keys::useKeys(),
+    keys::keysInput("keys", c("enter", "shift+enter")),
+    miniUI::miniContentPanel(
+    tags$style(type='text/css', '#install_status {white-space: pre-wrap;}'),
+    fluidRow(
+      column(12, 
+             selectInput(
+               "setup_type",
+               "Way to install Quarto extension",
+               choices = c(
+                 "quarto add extension" = "quarto_add_extension"
+                 # "quarto use template" = "quarto_use_template"
+                 ),
+               selected = "quarto use"
+             )
            )
-         )
-  ),
-  fluidRow(
-    column(12, 
-           textInput("install_dir", "Installation Directory:", value = file.path(getwd()), width = "100%"),
-           )
-  ),
-  fluidRow(
-   textOutput("selectedDir"),
-    column(12, 
-           actionButton("setup_btn", "Setup R Code", icon = icon("person-running"), class = "btn btn-primary btn-lg btn-block"),
-           actionButton("run_btn", "Install Selected Extensions",icon = icon("download"), class = "btn btn-success btn-lg btn-block"),
-           br(),
-           verbatimTextOutput("install_status")
-    )
-  ),
-  hr(),
-  fluidRow(
-    column(12, 
-           textOutput("category_description"))
-  ),
-  fluidRow(
-    column(3, actionButton("btn_shortcode", "Shortcode/Filter", icon = icon("cog"), class = "btn btn-primary btn-lg btn-block")),
-    column(3, actionButton("btn_journal", "Journal Articles", icon = icon("file-alt"), class = "btn btn-primary btn-lg btn-block")),
-    column(3, actionButton("btn_custom", "Custom Formats", icon = icon("file-code"), class = "btn btn-primary btn-lg btn-block")),
-    column(3, actionButton("btn_reveal", "Revealjs", icon = icon("slideshare"), class = "btn btn-primary btn-lg btn-block"))
-  ),
-  hr(),
-  DTOutput("extensions_table")
-)
-
-server <- function(input, output, session) {
-  filtered_extensions <- reactiveVal(extensions)
+    ),
+    fluidRow(
+      column(12, 
+             textInput("install_dir", "Installation Directory:", value = file.path(install_dir), width = "100%"),
+             )
+    ),
+    fluidRow(
+     textOutput("selectedDir"),
+      column(12, 
+             actionButton("setup_btn", "Setup R Code", icon = icon("person-running"), class = "btn btn-primary btn-lg btn-block"),
+             actionButton("run_btn", "Install Selected Extensions",icon = icon("download"), class = "btn btn-success btn-lg btn-block"),
+             br(),
+             verbatimTextOutput("install_status")
+      )
+    ),
+    hr(),
+    fluidRow(
+      column(12, 
+             textOutput("category_description"))
+    ),
+    fluidRow(
+      column(3, actionButton("btn_shortcode", "Shortcode/Filter", icon = icon("cog"), class = "btn btn-primary btn-lg btn-block")),
+      column(3, actionButton("btn_journal", "Journal Articles", icon = icon("file-alt"), class = "btn btn-primary btn-lg btn-block")),
+      column(3, actionButton("btn_custom", "Custom Formats", icon = icon("file-code"), class = "btn btn-primary btn-lg btn-block")),
+      column(3, actionButton("btn_reveal", "Revealjs", icon = icon("slideshare"), class = "btn btn-primary btn-lg btn-block"))
+    ),
+    hr(),
+    DTOutput("extensions_table")
+  ))
   
-  observeEvent(input$btn_shortcode, {
-    type <- "shortcodes-and-filters"
-    filtered_extensions(extensions %>% filter(file_name == type))
-    output$category_description <- renderText({
-      lookup_df$description[lookup_df$file_name == type]
-    })
-  })
-  
-  observeEvent(input$btn_journal, {
-    type <- "journal-articles"
-    filtered_extensions(extensions %>% filter(file_name == type))
-    output$category_description <- renderText({
-      lookup_df$description[lookup_df$file_name == type]
-    })
-  })
-  
-  observeEvent(input$btn_custom, {
-    type <- "custom-formats"
-    filtered_extensions(extensions %>% filter(file_name == type))
-    output$category_description <- renderText({
-      lookup_df$description[lookup_df$file_name == type]
-    })
-  })
-  
-  observeEvent(input$btn_reveal, {
-    type <- c("revealjs", "revealjs-formats")
-    filtered_extensions(extensions %>% filter(file_name %in% type))
-    output$category_description <- renderText({
-      lookup_df$description[lookup_df$file_name %in% type]
-    })
-  })
-  
-  output$extensions_table <- renderDT({
-    datatable(
-      filtered_extensions() %>% 
-        select(name, description, author) %>%
-        mutate(description = map(description, ~includeMarkdown(.x))) %>%
-        mutate(author = map(author, ~includeMarkdown(.x)))
-      ,
-      selection = 'multiple',
-      rownames = FALSE,
-      options = list(pageLength = 10)
-    )
-  }
-  # escape = FALSE
-  )
-  
-  install_commands <- reactiveVal(NULL)
-  
-  observeEvent(input$setup_btn, {
-    selected_rows <- input$extensions_table_rows_selected
-    if (length(selected_rows) > 0) {
-      selected_extensions <- filtered_extensions()[selected_rows, ]
-      install_dir <- input$install_dir
-      
-      commands <- sapply(selected_extensions$path, function(repo_path) {
-        paste0(input$setup_type, glue::glue('("{github_url_to_repo(repo_path)}", no_prompt = TRUE)'))
-      })
-      install_commands(commands)
+  server <- function(input, output, session) {
+    filtered_extensions <- reactiveVal(extensions)
     
-      output$install_status <- renderText({
-        paste0(
-          "R setup code:\n ", paste(install_commands(), collapse = "\n"), paste("\n\nWill it at:\n", install_dir, collapse="\n")
-        )
+    observeEvent(input$btn_shortcode, {
+      type <- "shortcodes-and-filters"
+      filtered_extensions(extensions %>% filter(file_name == type))
+      output$category_description <- renderText({
+        lookup_df$description[lookup_df$file_name == type]
       })
-    } else {
-      output$install_status <- renderText("No extensions selected for installation.")
+    })
+    
+    observeEvent(input$btn_journal, {
+      type <- "journal-articles"
+      filtered_extensions(extensions %>% filter(file_name == type))
+      output$category_description <- renderText({
+        lookup_df$description[lookup_df$file_name == type]
+      })
+    })
+    
+    observeEvent(input$btn_custom, {
+      type <- "custom-formats"
+      filtered_extensions(extensions %>% filter(file_name == type))
+      output$category_description <- renderText({
+        lookup_df$description[lookup_df$file_name == type]
+      })
+    })
+    
+    observeEvent(input$btn_reveal, {
+      type <- c("revealjs", "revealjs-formats")
+      filtered_extensions(extensions %>% filter(file_name %in% type))
+      output$category_description <- renderText({
+        lookup_df$description[lookup_df$file_name %in% type]
+      })
+    })
+    
+    output$extensions_table <- renderDT({
+      datatable(
+        filtered_extensions() %>% 
+          select(name, description, author) %>%
+          mutate(description = map(description, ~includeMarkdown(.x))) %>%
+          mutate(author = map(author, ~includeMarkdown(.x)))
+        ,
+        selection = 'multiple',
+        rownames = FALSE,
+        options = list(pageLength = 10)
+      )
     }
-  })
-
-    observeEvent(input$run_btn,{
+    # escape = FALSE
+    )
+    
+    install_commands <- reactiveVal(NULL)
+    
+    observeEvent(input$setup_btn | input$keys == "enter", {
+      selected_rows <- input$extensions_table_rows_selected
+      if (length(selected_rows) > 0) {
+        selected_extensions <- filtered_extensions()[selected_rows, ]
+        install_dir <- input$install_dir
+        
+        commands <- sapply(selected_extensions$path, function(repo_path) {
+          paste0(input$setup_type, glue::glue('("{github_url_to_repo(repo_path)}", no_prompt = TRUE)'))
+        })
+        install_commands(commands)
+      
+        output$install_status <- renderText({
+          paste0(
+            "R setup code:\n ", paste(install_commands(), collapse = "\n"), paste("\n\nWill it at:\n", install_dir, collapse="\n")
+          )
+        })
+      } else {
+        output$install_status <- renderText("No extensions selected for installation.")
+      }
+    })
+  
+    observeEvent(input$run_btn | input$keys == "shift+enter",{
+      req(install_commands())
+      req(input$run_btn | input$keys == "shift+enter")
       message("Installing extensions...")
       tmp <- setwd(input$install_dir)
       sapply(install_commands(), function(x){
@@ -201,8 +209,14 @@ server <- function(input, output, session) {
       })
       setwd(tmp)
       message("Done!")
-  })
-
+    })
+    # When the Done button is clicked, return a value
+    shiny::observeEvent(input$done, {
+        shiny::stopApp(returnValue)
+    })
+  }
+  
+  shiny::runGadget(ui, server)
 }
 
-shinyApp(ui, server)
+run_app()
