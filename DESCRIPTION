@@ -1,0 +1,25 @@
+Package: quartoextexp
+Title: Shiny app to and install Quarto extensions from Quarto Extension Listing
+Version: 0.0.0.9000
+Authors@R: 
+    person("Sam", "Parmar", , "first.last@example.com", role = c("aut", "cre"))
+Description: Explore the extensions available from the official 
+  [Quarto Extension Listing](https://quarto.org/docs/extensions/) and easily add 
+  one or more of them into a Quarto project.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports: 
+    dplyr,
+    DT,
+    glue,
+    httr,
+    keys,
+    magrittr,
+    miniUI,
+    purrr,
+    quarto (>= 1.4),
+    shiny,
+    stringr,
+    yaml
