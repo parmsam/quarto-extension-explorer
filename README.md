@@ -31,4 +31,4 @@ You can change the default installation directory by providing the `install_dir`
 quartoextexp::run_app(install_dir = "path/to/your/quarto-project")
 ```
 
-After installing it, you should see `Quarto Extension Explorer` in the RStudio Addins menu. Click on it to launch the Shiny app.
+After installing it, you should see `quartoextexp` in the RStudio Addins menu. Click on it to launch the Shiny app.
