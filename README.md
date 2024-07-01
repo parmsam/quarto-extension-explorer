@@ -1,21 +1,28 @@
 
-# quarto-extension-explorer
+# quartoextexp
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of quarto-extension-explorer is to provide a pretty simple Shiny app to explore the extensions available from the official [Quarto Extension Listing](https://quarto.org/docs/extensions/) and easily add one or more of them into a Quarto project.
+The goal of quartoextexp is to provide a pretty simple Shiny app to explore the extensions available from the official [Quarto Extension Listing](https://quarto.org/docs/extensions/) and easily add one or more of them into a Quarto project.
 
-You can access the app by cloning the repo and running it when in your Quarto project working directory.
+## Installation
 
-```r
-shiny::runApp("quarto-extension-explorer/app.R")
+You can install the development version of quartoextexp from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("parmsam/quarto-extension-explorer")
 ```
 
-Alternatively, you can run the following command in R while in your project working directory. 
+## Example
 
-```r
-shiny::runGitHub("quarto-extension-explorer", "parmsam", "master", destdir = ".")
+This is a basic example which shows you how to solve a common problem:
+
+``` r
+library(quartoextexp)
+## basic example code
+quartoextexp::run_app()
 ```
 
-Be sure to change your installation directory in the Shiny app if using the above function.
+After installing it, you should see `Quarto Extension Explorer` in the RStudio Addins menu. Click on it to launch the Shiny app.
