@@ -1,5 +1,5 @@
 
-# quartoextexp
+# quarto-extension-explorer
 
 <!-- badges: start -->
 <!-- badges: end -->
