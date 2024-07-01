@@ -1,0 +1,4 @@
+Name: Explore and install Quarto extensions
+Description: Explore and install Quarto extensions from the Extension Listing
+Binding: run_app
+Interactive: true
