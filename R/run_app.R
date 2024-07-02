@@ -230,8 +230,8 @@ run_app <- function(install_dir = getwd()) {
     })
   
     shiny::observeEvent(input$run_btn | input$keys == "shift+enter",{
-      shiny::req(install_commands())
-      shiny::req(input$run_btn | input$keys == "shift+enter")
+      shiny::req(length(install_commands()) > 0)
+      shiny::req(input$run_btn > 0 || input$keys == "shift+enter")
       message("Installing extensions...")
       tmp <- setwd(input$install_dir)
       sapply(install_commands(), function(x){
