@@ -283,5 +283,3 @@ run_app <- function(install_dir = getwd()) {
   
   shiny::runGadget(ui, server)
 }
-
-run_app()
