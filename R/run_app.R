@@ -120,8 +120,8 @@ run_app <- function(install_dir = getwd()) {
                "setup_type",
                "Way to install Quarto extension",
                choices = c(
-                 "quarto add extension" = "quarto_add_extension"
-                 # "quarto use template" = "quarto_use_template"
+                 "quarto add extension" = "quarto_add_extension",
+                 "quarto use template" = "quarto_use_template"
                  ),
                selected = "quarto use"
              )
@@ -157,6 +157,16 @@ run_app <- function(install_dir = getwd()) {
   ))
   
   server <- function(input, output, session) {
+    
+    showModal(modalDialog(
+      title = "Warning",
+      "Quarto extensions may execute code when documents are rendered. If you do not trust the author(s) of the Quarto extensions, do not install or use the selected Quarto extensions. Only install Quarto extensions from sources you trust.",
+      easyClose = TRUE,
+      footer = tagList(
+        modalButton("Close")
+      )
+    ))
+    
     filtered_extensions <- shiny::reactiveVal(extensions)
     
     shiny::observeEvent(input$btn_shortcode, {
