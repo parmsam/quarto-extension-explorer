@@ -120,10 +120,10 @@ run_app <- function(install_dir = getwd()) {
                "setup_type",
                "Way to install Quarto extension",
                choices = c(
-                 "quarto add extension" = "quarto_add_extension",
-                 "quarto use template" = "quarto_use_template"
+                 "quarto add extension" = "quarto::quarto_add_extension",
+                 "quarto use template" = "quarto::quarto_use_template"
                  ),
-               selected = "quarto use"
+               selected = "quarto::quarto_add_extension"
              )
            )
     ),
@@ -153,7 +153,10 @@ run_app <- function(install_dir = getwd()) {
       shiny::column(3, shiny::actionButton("btn_reveal", "Revealjs", icon = shiny::icon("slideshare"), class = "btn btn-primary btn-lg btn-block"))
     ),
     shiny::hr(),
-    DT::DTOutput("extensions_table")
+    shiny::h3("Available Extensions"),
+    DT::DTOutput("extensions_table"),
+    shiny::h3("Installed Extensions"),
+    DT::DTOutput("installed_table")
   ))
   
   server <- function(input, output, session) {
@@ -166,6 +169,13 @@ run_app <- function(install_dir = getwd()) {
         modalButton("Close")
       )
     ))
+    
+    installed_extensions <- reactive({
+      # rerun on each install
+      input$setup_btn
+      input$run_btn
+      return(quarto_list_extensions())
+    })
     
     filtered_extensions <- shiny::reactiveVal(extensions)
     
@@ -193,6 +203,7 @@ run_app <- function(install_dir = getwd()) {
       })
     })
     
+    
     shiny::observeEvent(input$btn_reveal, {
       type <- c("revealjs", "revealjs-formats")
       filtered_extensions(extensions %>% dplyr::filter(file_name %in% type))
@@ -201,19 +212,32 @@ run_app <- function(install_dir = getwd()) {
       })
     })
     
-    output$extensions_table <- DT::renderDT({
+    output$installed_table <- DT::renderDT({
+      installed_df <- installed_extensions() 
       DT::datatable(
-        filtered_extensions() %>% 
-          dplyr::select(name, description, author) %>%
-          dplyr::mutate(description = purrr::map(description, ~shiny::includeMarkdown(.x))) %>%
-          dplyr::mutate(author = purrr::map(author, ~shiny::includeMarkdown(.x)))
-        ,
+        installed_df,
+        selection = 'none',
+        rownames = FALSE,
+        options = list(pageLength = 10)
+      )
+    })
+    
+    output$extensions_table <- DT::renderDT({
+      extensions_df <- filtered_extensions() %>% 
+        dplyr::mutate(name = glue::glue("[{name}]({path})")) %>%
+        dplyr::select(name, description, author) %>%
+        dplyr::mutate(name = purrr::map(name, ~shiny::includeMarkdown(.x))) %>%
+        dplyr::mutate(description = purrr::map(description, ~shiny::includeMarkdown(.x))) %>%
+        dplyr::mutate(author = purrr::map(author, ~shiny::includeMarkdown(.x)))
+      DT::datatable(
+        extensions_df,
         selection = 'multiple',
         rownames = FALSE,
         options = list(pageLength = 10)
       )
-    }
-    # escape = FALSE
+    },
+    escape = FALSE,
+    server = FALSE
     )
     
     install_commands <- shiny::reactiveVal(NULL)
@@ -259,3 +283,5 @@ run_app <- function(install_dir = getwd()) {
   
   shiny::runGadget(ui, server)
 }
+
+run_app()

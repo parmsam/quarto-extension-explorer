@@ -22,4 +22,5 @@ Imports:
     quarto (>= 1.4),
     shiny,
     stringr,
-    yaml
+    yaml,
+    readr
