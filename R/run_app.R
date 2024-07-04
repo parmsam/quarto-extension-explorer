@@ -44,9 +44,9 @@ get_extensions <- function() {
 #' @return A dataframe containing the components of a GitHub URL
 #' @importFrom stringr str_match
 #' @examples
-#'  quartoextexp:::githubURLParts("http://github.com/tidyverse/dplyr")
-#'  quartoextexp:::githubURLParts("https://github.com/tidyverse/dplyr.git")
-githubURLParts <- function(urls) {
+#'  quartoextexp:::github_url_parts("http://github.com/tidyverse/dplyr")
+#'  quartoextexp:::github_url_parts("https://github.com/tidyverse/dplyr.git")
+github_url_parts <- function(urls) {
   tmp <- stringr::str_match(urls,'.*http[s]?://github.com/(([^/]+)/([^/]+)).*')
   tmp <- data.frame(tmp, stringsAsFactors = FALSE)
   colnames(tmp) <- c('url', 'user_repo', 'user', 'repo')
@@ -63,7 +63,18 @@ githubURLParts <- function(urls) {
 #' quartoextexp:::github_url_to_repo("http://github.com/tidyverse/dplyr")
 #' quartoextexp:::github_url_to_repo("https://github.com/tidyverse/dplyr.git")
 github_url_to_repo <- function(url) {
-  githubURLParts(url)[["user_repo"]]
+  github_url_parts(url)[["user_repo"]]
+}
+
+#' Extract Username from GitHub URL
+#'
+#' @param url The GitHub URL to extract the user name from
+#' @return A character vector containing the user name
+#' @examples
+#' quartoextexp:::github_url_to_user("http://github.com/tidyverse/dplyr")
+#' quartoextexp:::github_url_to_user("https://github.com/tidyverse/dplyr.git")
+github_url_to_user <- function(url){
+  github_url_parts(url)$user
 }
 
 #' Run Quarto Extension Explorer Shiny App
@@ -118,10 +129,12 @@ run_app <- function(install_dir = getwd()) {
       shiny::column(12, 
              shiny::selectInput(
                "setup_type",
-               "Way to install Quarto extension",
+               "Way to handle Quarto extension",
                choices = c(
                  "quarto add extension" = "quarto::quarto_add_extension",
-                 "quarto use template" = "quarto::quarto_use_template"
+                 "quarto use template" = "quarto::quarto_use_template",
+                 "quarto update" = "quarto_update_extension",
+                 "quarto remove" = "quarto_remove_extension"
                  ),
                selected = "quarto::quarto_add_extension"
              )
@@ -136,7 +149,7 @@ run_app <- function(install_dir = getwd()) {
      shiny::textOutput("selectedDir"),
       shiny::column(12, 
              shiny::actionButton("setup_btn", "Setup R Code",  icon = shiny::icon("person-running"), class = "btn btn-primary btn-lg btn-block"),
-             shiny::actionButton("run_btn", "Install Selected Extensions", icon = shiny::icon("download"), class = "btn btn-success btn-lg btn-block"),
+             shiny::actionButton("run_btn", "Apply on Selected Extensions", icon = shiny::icon("download"), class = "btn btn-success btn-lg btn-block"),
              shiny::br(),
              shiny::verbatimTextOutput("install_status")
       )
@@ -224,8 +237,10 @@ run_app <- function(install_dir = getwd()) {
     
     output$extensions_table <- DT::renderDT({
       extensions_df <- filtered_extensions() %>% 
+        dplyr::mutate(id = glue::glue("{github_url_to_user(path)}/{name}")) %>%
+        dplyr::mutate(installed = id %in% installed_extensions()$Id) %>%
         dplyr::mutate(name = glue::glue("[{name}]({path})")) %>%
-        dplyr::select(name, description, author) %>%
+        dplyr::select(name, description, author, installed) %>%
         dplyr::mutate(name = purrr::map(name, ~shiny::includeMarkdown(.x))) %>%
         dplyr::mutate(description = purrr::map(description, ~shiny::includeMarkdown(.x))) %>%
         dplyr::mutate(author = purrr::map(author, ~shiny::includeMarkdown(.x)))
@@ -248,14 +263,18 @@ run_app <- function(install_dir = getwd()) {
         selected_extensions <- filtered_extensions()[selected_rows, ]
         install_dir <- input$install_dir
         
-        commands <- sapply(selected_extensions$path, function(repo_path) {
-          paste0(input$setup_type, glue::glue('("{github_url_to_repo(repo_path)}", no_prompt = TRUE)'))
+        commands <- purrr::map2(selected_extensions$path, selected_extensions$name, function(path, name) {
+          id <- github_url_to_repo(path)
+          if(input$setup_type == "quarto_remove_extension"){
+            id <- glue::glue("{github_url_to_user(path)}/{name}")
+          }
+          paste0(input$setup_type, glue::glue('("{id}", no_prompt = TRUE)'))
         })
         install_commands(commands)
       
         output$install_status <- shiny::renderText({
           paste0(
-            "R setup code:\n ", paste(install_commands(), collapse = "\n"), paste("\n\nWill it at:\n", install_dir, collapse="\n")
+            "R setup code:\n", paste(install_commands(), collapse = "\n"), paste("\n\nWill run it at:\n", install_dir, collapse="\n")
           )
         })
       } else {
@@ -283,3 +302,5 @@ run_app <- function(install_dir = getwd()) {
   
   shiny::runGadget(ui, server)
 }
+
+run_app()
