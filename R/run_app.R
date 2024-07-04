@@ -1,99 +1,21 @@
-#' Fetch and Parse Quarto Extension Listing YAML Files from GitHub
-#'
-#' @return A dataframe that represents the parsed content of the extension YAML files
-#' and includes the file name as an additional column.
-#' @importFrom httr GET status_code content
-#' @importFrom purrr map
-#' @importFrom yaml yaml.load
-#' @importFrom tools file_path_sans_ext
-#' @importFrom dplyr bind_rows filter
-#' @examples
-#' \dontrun{
-#'  get_extensions()
-#' }
-get_extensions <- function() {
-  url_base <- "https://raw.githubusercontent.com/quarto-dev/quarto-web/main/docs/extensions/listings/"
-  extensions <- c(
-    "shortcodes-and-filters.yml",
-    "journal-articles.yml",
-    "custom-formats.yml",
-    "revealjs.yml",
-    "revealjs-formats.yml"
-  )
-  extension_list <- purrr::map(extensions, function(ext) {
-    url <- paste0(url_base, ext)
-    res <- httr::GET(url)
-    if (httr::status_code(res) == 200) {
-      content_list <- httr::content(res, "text") %>%
-        yaml::yaml.load()
-      content_list <- purrr::map(content_list, function(item) {
-        item$file_name <- tools::file_path_sans_ext(ext)
-        return(item)
-      })
-      return(content_list)
-    } else {
-      return(NULL)
-    }
-  })
-  dplyr::bind_rows(extension_list) %>% dplyr::filter(!is.null(name))
-}
-
-#' Get GitHub URL Components
-#'
-#' @param urls A string vector with GitHub URLs
-#' @return A dataframe containing the components of a GitHub URL
-#' @importFrom stringr str_match
-#' @examples
-#'  quartoextexp:::github_url_parts("http://github.com/tidyverse/dplyr")
-#'  quartoextexp:::github_url_parts("https://github.com/tidyverse/dplyr.git")
-github_url_parts <- function(urls) {
-  tmp <- stringr::str_match(urls,'.*http[s]?://github.com/(([^/]+)/([^/]+)).*')
-  tmp <- data.frame(tmp, stringsAsFactors = FALSE)
-  colnames(tmp) <- c('url', 'user_repo', 'user', 'repo')
-  tmp$user_repo <- sub('\\.git$','', tmp$user_repo)
-  tmp$repo <- sub('\\.git$','', tmp$repo)
-  tmp
-}
-
-#' Extract User and Repository from GitHub URL
-#'
-#' @param url The GitHub URL to extract the user and repository name from
-#' @return A character vector containing the user and repository name
-#' @examples
-#' quartoextexp:::github_url_to_repo("http://github.com/tidyverse/dplyr")
-#' quartoextexp:::github_url_to_repo("https://github.com/tidyverse/dplyr.git")
-github_url_to_repo <- function(url) {
-  github_url_parts(url)[["user_repo"]]
-}
-
-#' Extract Username from GitHub URL
-#'
-#' @param url The GitHub URL to extract the user name from
-#' @return A character vector containing the user name
-#' @examples
-#' quartoextexp:::github_url_to_user("http://github.com/tidyverse/dplyr")
-#' quartoextexp:::github_url_to_user("https://github.com/tidyverse/dplyr.git")
-github_url_to_user <- function(url){
-  github_url_parts(url)$user
-}
-
 #' Run Quarto Extension Explorer Shiny App
 #'
-#' @param install_dir The installation directory for the Quarto extension
-#'  by default this is the current working directory
-#' @import DT
-#' @import shiny
+#' @param install_dir The installation directory for the Quarto extension by 
+#'  default this is the current working directory
+#' @param modal_on_startup Show the informational modal dialog on startup
+#' @rawNamespace import(shiny, except=c(dataTableOutput, renderDataTable))
 #' @import keys
 #' @import miniUI
 #' @import dplyr
 #' @import glue
 #' @import quarto
+#' @import DT
 #' @examples
 #' \dontrun{
 #'  run_app()
 #' }
 #' @export
-run_app <- function(install_dir = getwd()) {
+run_app <- function(install_dir = getwd(), modal_on_startup = TRUE) {
   # Fetch extensions once at the start
   extensions <- get_extensions()
   
@@ -129,7 +51,7 @@ run_app <- function(install_dir = getwd()) {
       shiny::column(12, 
              shiny::selectInput(
                "setup_type",
-               "Way to handle Quarto extension",
+               "Way to handle Quarto extension:",
                choices = c(
                  "quarto add extension" = "quarto::quarto_add_extension",
                  "quarto use template" = "quarto::quarto_use_template",
@@ -174,14 +96,16 @@ run_app <- function(install_dir = getwd()) {
   
   server <- function(input, output, session) {
     
-    showModal(modalDialog(
-      title = "Warning",
-      "Quarto extensions may execute code when documents are rendered. If you do not trust the author(s) of the Quarto extensions, do not install or use the selected Quarto extensions. Only install Quarto extensions from sources you trust.",
-      easyClose = TRUE,
-      footer = tagList(
-        modalButton("Close")
-      )
-    ))
+    if(modal_on_startup){
+      showModal(modalDialog(
+        title = "Warning",
+        "Quarto extensions may execute code when documents are rendered. If you do not trust the author(s) of the Quarto extensions, do not install or use the selected Quarto extensions. Only install Quarto extensions from sources you trust.",
+        easyClose = TRUE,
+        footer = tagList(
+          modalButton("Close")
+        )
+      ))
+    }
     
     installed_extensions <- reactive({
       # rerun on each install
@@ -225,7 +149,7 @@ run_app <- function(install_dir = getwd()) {
       })
     })
     
-    output$installed_table <- DT::renderDT({
+    output$installed_table <- DT::renderDataTable({
       installed_df <- installed_extensions() 
       DT::datatable(
         installed_df,
@@ -235,7 +159,7 @@ run_app <- function(install_dir = getwd()) {
       )
     })
     
-    output$extensions_table <- DT::renderDT({
+    output$extensions_table <- DT::renderDataTable({
       extensions_df <- filtered_extensions() %>% 
         dplyr::mutate(id = glue::glue("{github_url_to_user(path)}/{name}")) %>%
         dplyr::mutate(installed = id %in% installed_extensions()$Id) %>%
@@ -302,5 +226,3 @@ run_app <- function(install_dir = getwd()) {
   
   shiny::runGadget(ui, server)
 }
-
-run_app()

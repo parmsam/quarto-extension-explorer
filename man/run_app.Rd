@@ -4,11 +4,13 @@
 \alias{run_app}
 \title{Run Quarto Extension Explorer Shiny App}
 \usage{
-run_app(install_dir = getwd())
+run_app(install_dir = getwd(), modal_on_startup = TRUE)
 }
 \arguments{
-\item{install_dir}{The installation directory for the Quarto extension
-by default this is the current working directory}
+\item{install_dir}{The installation directory for the Quarto extension by
+default this is the current working directory}
+
+\item{modal_on_startup}{Show the informational modal dialog on startup}
 }
 \description{
 Run Quarto Extension Explorer Shiny App

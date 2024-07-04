@@ -23,4 +23,5 @@ Imports:
     shiny,
     stringr,
     yaml,
-    readr
+    readr,
+    rlang
