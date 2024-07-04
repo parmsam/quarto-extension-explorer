@@ -16,6 +16,8 @@ A character vector containing the user and repository name
 Extract User and Repository from GitHub URL
 }
 \examples{
-quartoextexp:::github_url_to_repo("http://github.com/tidyverse/dplyr")
-quartoextexp:::github_url_to_repo("https://github.com/tidyverse/dplyr.git")
+\dontrun{
+github_url_to_repo("http://github.com/tidyverse/dplyr")
+github_url_to_repo("https://github.com/tidyverse/dplyr.git")
+}
 }

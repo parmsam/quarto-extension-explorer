@@ -16,6 +16,8 @@ A character vector containing the user name
 Extract Username from GitHub URL
 }
 \examples{
-quartoextexp:::github_url_to_user("http://github.com/tidyverse/dplyr")
-quartoextexp:::github_url_to_user("https://github.com/tidyverse/dplyr.git")
+\dontrun{
+github_url_to_user("http://github.com/tidyverse/dplyr")
+github_url_to_user("https://github.com/tidyverse/dplyr.git")
+}
 }

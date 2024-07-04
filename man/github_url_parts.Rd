@@ -16,6 +16,8 @@ A dataframe containing the components of a GitHub URL
 Get GitHub URL Components
 }
 \examples{
- quartoextexp:::github_url_parts("http://github.com/tidyverse/dplyr")
- quartoextexp:::github_url_parts("https://github.com/tidyverse/dplyr.git")
+\dontrun{
+ github_url_parts("http://github.com/tidyverse/dplyr")
+ github_url_parts("https://github.com/tidyverse/dplyr.git")
+}
 }

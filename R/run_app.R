@@ -172,10 +172,10 @@ run_app <- function(install_dir = getwd(), modal_on_startup = TRUE) {
         extensions_df,
         selection = 'multiple',
         rownames = FALSE,
-        options = list(pageLength = 10)
+        options = list(pageLength = 10),
+        escape = FALSE
       )
     },
-    escape = FALSE,
     server = FALSE
     )
     
