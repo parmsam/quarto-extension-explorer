@@ -42,4 +42,4 @@ You can select one or more extensions in the **Available Extensions** data table
 
 You can see your installed extensions in the **Installed Extensions** data table. You can manage extensions by changing the mode from add extension to update or remove then selecting the relevant extension in the `Available Extensions` table. Then, same as before, you can setup your R code again and apply it on the selected extensions.
 
-<img src="man/figures/readme-large-screenshot.png" width="55%" />
+<img src="man/figures/readme-example-usage.gif" width="90%" />
