@@ -36,11 +36,10 @@ After installing it, you should see `quartoextexp` in the RStudio Addins menu. C
 
 <img src="man/figures/readme-rstudio-addin.jpg" width="55%" />
 
-You can select one or more extensions in the **Available Extensions** data table then click `Setup R Code` to generate the R code to apply on the selected extensions to your Quarto project. Then you can click `Apply on Selected Extensions` to run the R code you generated. By default all of the extensions in the Quarto Extension Listing will appear in the Avaiable Extensions data table. You can click on the Extension category buttons to filter the data table down (for example by Journal Articles or Revealjs). 
+You can select one or more extensions in the **Available Extensions** data table then click `Setup R Code` to generate the R code to apply on the selected extensions to your Quarto project. Then you can click `Apply on Selected Extensions` to run the R code you generated. By default, all of the extensions in the Quarto Extension Listing will appear in the **Available Extensions** data table. You can click on the Extension category buttons to filter the data table down (for example by Journal Articles or Revealjs). You can also search for a specific extension by typing in the search box.
 
 <img src="man/figures/readme-small-screenshot.png" width="55%" />
 
-You can see your installed extensions in the **Installed Extensions** data table. You can manage each installed extension by clicking on the extension in this table and changing the mode from add extension to update or remove. Then you can setup your R code again and apply it on the selected extensions.
+You can see your installed extensions in the **Installed Extensions** data table. You can manage extensions by changing the mode from add extension to update or remove then selecting the relevant extension in the `Available Extensions` table. Then, same as before, you can setup your R code again and apply it on the selected extensions.
 
 <img src="man/figures/readme-large-screenshot.png" width="55%" />
-
