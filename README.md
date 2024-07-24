@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-As mentiond on the Quarto page, Quarto Extensions are a powerful way to modify or extend the behavior of Quarto, and can be created and distributed by anyone. The goal of quartoextexp is to provide a Shiny gadget to explore the extensions available from the official [Quarto Extension Listing](https://quarto.org/docs/extensions/) and easily add one or more of them into a Quarto project.
+As mentiond on the Quarto website, Quarto Extensions are a powerful way to modify or extend the behavior of Quarto, and can be created and distributed by anyone. The goal of quartoextexp is to provide a Shiny gadget to explore the extensions available from the official [Quarto Extension Listing](https://quarto.org/docs/extensions/) and easily add one or more of them into a Quarto project.
 
 ## Installation
 
